@@ -2,9 +2,11 @@
 
 A complete, self-contained WebGL racing game (Three.js r169, bundled locally — no build step, no CDN needed).
 
-- 2.7 km circuit with elevation, curbs, armco barriers, grandstand, pit building, 2,400 trees, mountains
+- 5 circuits with their own environment: Valle Ridge (alpine afternoon), Red Mesa (desert midday), Costa Azul (coast at sunset with sea and palms), Frostpine Ring (snowfall, lower grip), Neon Harbor (night street circuit with city lights)
+- 4 original cars built from lofted body sections: Vortex GT, Kestrel SV, Ronin 8, Atom RS, each with its own power, grip and top speed
+- Chase, far chase, cockpit (steering wheel, live dashboard) and bumper cameras; look back with B
 - PBR clear-coat car paint, sky-based reflections, real-time soft shadows, bloom, MSAA, ACES tone mapping
-- Physics: speed-sensitive steering, grip limit (understeer), handbrake drift, 6-speed gearbox, nitro, wall and car contact
+- Physics: torque curve and 6-speed gearbox (automatic or manual with rev-protection), traction limit and wheelspin, speed-sensitive steering, rotational inertia, aero grip, handbrake drift, nitro, horn
 - 5 AI drivers that brake for corners, take racing lines, overtake and avoid traffic
 - F1-style five-light start, lap timing, best lap (saved), live standings, minimap, results table
 - Synthesized engine, tyre, wind and impact sound (no audio files)
@@ -18,8 +20,10 @@ index.html            the game page (SEO meta, JSON-LD, import map)
 js/config.js          ← the only file you edit to turn ads on
 js/main.js            game flow, rendering, camera, HUD wiring
 js/vehicle.js         player physics + AI drivers
-js/track.js           circuit, terrain, scenery
-js/car.js             procedural car model
+js/maps.js            the 5 circuits and their weather/lighting
+js/track.js           circuit geometry, terrain, trackside furniture
+js/scenery.js         trees, palms, cacti, city, street lights, sea, snow
+js/cars.js            the 4 car models and the cockpit
 js/textures.js        procedural textures
 js/ads.js             AdSense H5 Games Ads wrapper (safe when ads are off/blocked)
 js/audio.js, fx.js, hud.js, input.js
@@ -80,13 +84,13 @@ Frequency is capped by `frequencyHint` (default 60 s) and by Google.
 
 ## Controls
 
-W/↑ throttle · S/↓ brake & reverse · A/D steer · Space handbrake · Shift/N nitro · C camera · R reset to track · P/Esc pause · M mute · F FPS counter.
-Gamepad: RT throttle, LT brake, A handbrake, B nitro, Y camera, Start pause.
+W/↑ throttle · S/↓ brake & reverse · A/D steer · Space handbrake · Shift/N nitro · H horn · E/Q shift up/down (manual) · T auto/manual · C camera · V cockpit · B look back · R reset to track · P/Esc pause · M mute · F FPS counter.
+Gamepad: RT throttle, LT brake, A handbrake, B nitro, RB/LB shift, Y camera, R3 cockpit, L3 horn, Back look back, Start pause.
 
 ## Tuning
 
 - Opponents / default laps: `js/config.js`
-- Car feel: `js/vehicle.js` (`top`, acceleration `13.5`, braking `33`, grip `aMax`, steering `maxSteer`)
+- Car performance: `stats` of each model in `js/cars.js` (power, traction, drag, grip, steering, top speed)
+- Add or edit circuits: control points and environment in `js/maps.js`
 - AI pace: `skills` array in `js/main.js` and `DIFF` presets; corner speed `aLat` in `js/track.js`
-- Track layout: `CTRL` control points at the top of `js/track.js`
 - Lighting: sun, exposure and sky settings near the top of `js/main.js`

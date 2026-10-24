@@ -202,6 +202,81 @@ export function buildTextures(maxAniso = 8) {
     T.blob = toTex(c, { repeat: false });
   }
 
+  // ---------- License plate (fictional) ----------
+  {
+    const [c, g] = canvas(512, 112);
+    g.fillStyle = '#f4f4f0'; g.fillRect(0, 0, 512, 112);
+    g.strokeStyle = '#1b1b1b'; g.lineWidth = 6; g.strokeRect(5, 5, 502, 102);
+    g.fillStyle = '#1d4fb8'; g.fillRect(8, 8, 50, 96);
+    g.fillStyle = '#ffd400'; g.font = '700 20px Arial'; g.textAlign = 'center'; g.fillText('AV', 33, 92);
+    g.fillStyle = '#151515'; g.font = '700 74px "Arial Narrow", Arial, sans-serif'; g.textBaseline = 'middle';
+    g.fillText('APX 0' + (1 + Math.floor(R() * 9)), 285, 60);
+    T.plate = toTex(c, { repeat: false });
+  }
+
   for (const k of Object.keys(T)) if (T[k] && T[k].isTexture) T[k].anisotropy = maxAniso;
+  T._aniso = maxAniso;
   return T;
+}
+
+// Theme ground textures, generated on demand and cached.
+const groundCache = {};
+export function cachedTextures() { const out = []; for (const k in groundCache) out.push(groundCache[k].map, groundCache[k].normal); return out; }
+export function groundTexture(kind, aniso = 8) {
+  if (groundCache[kind]) return groundCache[kind];
+  const N = makeNoise(kind.length * 31 + 5), R = rng(kind.length * 77);
+  const w = 512, h = 512;
+  const [c, g] = canvas(w, h);
+  const img = g.createImageData(w, h);
+  const hgt = new Float32Array(w * h);
+  const base = { grass: [66, 96, 38], sand: [196, 150, 98], snow: [232, 238, 246], dirt: [112, 92, 66], lawn: [58, 88, 40] }[kind] || [128, 128, 128];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const n = N.fbm(x / 40, y / 40, 4), f = R() - 0.5;
+    let k = 0.8 + n * 0.32 + f * (kind === 'snow' ? 0.06 : 0.25);
+    if (kind === 'sand') k = 0.88 + n * 0.22 + f * 0.12 + Math.sin((x + n * 60) / 9) * 0.03;
+    const i = (y * w + x) * 4;
+    img.data[i] = Math.min(255, base[0] * k); img.data[i + 1] = Math.min(255, base[1] * k); img.data[i + 2] = Math.min(255, base[2] * (kind === 'snow' ? 1 : k));
+    img.data[i + 3] = 255;
+    hgt[y * w + x] = f * (kind === 'snow' ? 0.3 : 1) + n;
+  }
+  g.putImageData(img, 0, 0);
+  if (kind === 'grass' || kind === 'lawn') for (let i = 0; i < 6000; i++) {
+    const x = R() * w, y = R() * h, l = 3 + R() * 5;
+    g.strokeStyle = `rgba(${90 + R() * 50},${120 + R() * 50},${40 + R() * 30},0.35)`;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + (R() - 0.5) * 2, y - l); g.stroke();
+  }
+  if (kind === 'sand') for (let i = 0; i < 1500; i++) { g.fillStyle = `rgba(${90 + R() * 40},${60 + R() * 30},40,${R() * 0.35})`; g.fillRect(R() * w, R() * h, 2, 2); }
+  const map = toTex(c), nrm = normalFromHeight(hgt, w, h, kind === 'snow' ? 0.6 : 1.2);
+  map.anisotropy = nrm.anisotropy = aniso;
+  return (groundCache[kind] = { map, normal: nrm, avg: base });
+}
+
+// Lit office/apartment windows for night skyline buildings
+export function windowTexture(seed = 3) {
+  const R = rng(seed);
+  const [c, g] = canvas(256, 512);
+  g.fillStyle = '#0d1016'; g.fillRect(0, 0, 256, 512);
+  for (let y = 8; y < 512; y += 16) for (let x = 6; x < 256; x += 14) {
+    const r = R();
+    if (r < 0.45) continue;
+    const warm = R() < 0.7;
+    const a = 0.35 + R() * 0.65;
+    g.fillStyle = warm ? `rgba(255,${190 + R() * 40},${110 + R() * 50},${a})` : `rgba(${150 + R() * 60},${200 + R() * 40},255,${a})`;
+    g.fillRect(x, y, 9, 10);
+  }
+  const t = toTex(c); return t;
+}
+
+// Palm frond with alpha
+export function frondTexture() {
+  const [c, g] = canvas(128, 512);
+  g.clearRect(0, 0, 128, 512);
+  g.strokeStyle = '#3d5a1f'; g.lineWidth = 6; g.beginPath(); g.moveTo(64, 512); g.lineTo(64, 0); g.stroke();
+  for (let y = 20; y < 500; y += 7) {
+    const len = Math.sin((y / 512) * Math.PI) * 58 + 6;
+    g.strokeStyle = `rgb(${50 + Math.random() * 20},${100 + Math.random() * 30},${30 + Math.random() * 15})`; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(64, y); g.lineTo(64 - len, y + 22); g.stroke();
+    g.beginPath(); g.moveTo(64, y); g.lineTo(64 + len, y + 22); g.stroke();
+  }
+  return toTex(c, { repeat: false });
 }

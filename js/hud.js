@@ -30,6 +30,7 @@ export class HUD {
     }
     this.bounds = { minX, maxX, minZ, maxZ };
     this.track = track;
+    this.mapBg = null;
   }
 
   _mapXY(x, z, W, H) {
@@ -75,7 +76,7 @@ export class HUD {
     c.beginPath(); c.arc(x, y, W * 0.04, 0, Math.PI * 2); c.fill(); c.stroke();
   }
 
-  drawSpeedo(kmh, rpm, redline, gear, nitroOn) {
+  drawSpeedo(kmh, rpm, redline, gear, nitroOn, manual = false) {
     const c = this.sctx, W = this.speedo.width, H = this.speedo.height;
     const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.46;
     c.clearRect(0, 0, W, H);
@@ -103,9 +104,40 @@ export class HUD {
     c.fillText(String(Math.round(kmh)), cx, cy + R * 0.02);
     c.fillStyle = 'rgba(255,255,255,0.55)'; c.font = `600 ${R * 0.13}px 'Barlow Semi Condensed', system-ui, sans-serif`;
     c.fillText('KM/H', cx, cy + R * 0.34);
+    // shift lights
+    if (rf > 0.84) {
+      const n = Math.min(5, Math.floor((rf - 0.84) / 0.03) + 1);
+      for (let k = 0; k < 5; k++) {
+        c.fillStyle = k < n ? (rf > 0.94 ? '#ff3b2a' : k < 3 ? '#3fd68a' : '#ffd400') : 'rgba(255,255,255,0.08)';
+        c.beginPath(); c.arc(cx + (k - 2) * R * 0.15, cy - R * 0.42, R * 0.045, 0, Math.PI * 2); c.fill();
+      }
+    }
+    c.fillStyle = 'rgba(255,255,255,0.5)'; c.font = `600 ${R * 0.1}px 'Barlow Semi Condensed', sans-serif`;
+    c.fillText(manual ? 'MANUAL' : 'AUTO', cx, cy + R * 0.86);
     // gear
     c.fillStyle = rf > 0.93 ? '#ff3b2a' : '#ffd400'; c.font = `700 ${R * 0.24}px 'Chakra Petch', sans-serif`;
     c.fillText(gear, cx, cy + R * 0.66);
+  }
+
+  // live instrument cluster for the cockpit view (drawn to the car's dash texture)
+  drawDash(cv, kmh, rpm, redline, gear, nitroOn, nitro) {
+    const c = cv.getContext('2d'), W = cv.width, H = cv.height;
+    c.fillStyle = '#05070a'; c.fillRect(0, 0, W, H);
+    const rf = Math.min(1, rpm / redline);
+    const bars = 30;
+    for (let k = 0; k < bars; k++) {
+      const on = k / bars < rf;
+      c.fillStyle = on ? (k > bars * 0.85 ? '#ff3b2a' : k > bars * 0.7 ? '#ffd400' : '#e8f0ff') : '#1a1f27';
+      const x = 20 + k * ((W - 40) / bars), h = 14 + k * 1.1;
+      c.fillRect(x, 66 - h, (W - 40) / bars - 4, h);
+    }
+    c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = "700 74px 'Chakra Petch', sans-serif"; c.fillText(String(Math.round(kmh)), W * 0.5, 128);
+    c.font = "600 20px 'Barlow Semi Condensed', sans-serif"; c.fillStyle = '#8b97a6'; c.fillText('KM/H', W * 0.5, 176);
+    c.font = "700 64px 'Chakra Petch', sans-serif"; c.fillStyle = rf > 0.93 ? '#ff3b2a' : '#ffd400'; c.fillText(gear, W * 0.86, 126);
+    c.fillStyle = '#1a1f27'; c.fillRect(30, 160, 120, 10);
+    c.fillStyle = nitroOn ? '#9fdcff' : '#2c7dff'; c.fillRect(30, 160, 120 * nitro, 10);
+    c.font = "600 18px 'Barlow Semi Condensed', sans-serif"; c.fillStyle = '#8ec9ff'; c.textAlign = 'left'; c.fillText('N2O', 30, 142);
   }
 
   message(text, sub = '', dur = 1.5, cls = '') {

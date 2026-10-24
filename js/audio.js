@@ -73,13 +73,40 @@ export class AudioFX {
     gr.connect(gf); gf.connect(this.gravelGain); this.gravelGain.connect(this.bus);
   }
 
-  update(rpm, throttle, speed, slip, offroad, nitro) {
+  horn(on) {
+    if (!this.ctx) return;
+    if (!this.hornGain) {
+      const ctx = this.ctx;
+      this.hornGain = ctx.createGain(); this.hornGain.gain.value = 0;
+      const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2400; f.Q.value = 1;
+      const pk = ctx.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 900; pk.gain.value = 8;
+      for (const fr of [415, 522]) { const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = fr; const g = ctx.createGain(); g.gain.value = 0.5; o.connect(g); g.connect(f); o.start(); }
+      f.connect(pk); pk.connect(this.hornGain); this.hornGain.connect(this.bus);
+    }
+    this.hornGain.gain.setTargetAtTime(on ? 0.28 : 0, this.ctx.currentTime, on ? 0.012 : 0.03);
+  }
+
+  shift(kind) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    // brief torque cut: dip the engine and add a mechanical clunk
+    this.eOut.gain.cancelScheduledValues(t);
+    this.eOut.gain.setValueAtTime(this.eOut.gain.value, t);
+    this.eOut.gain.linearRampToValueAtTime(this.eOut.gain.value * (kind === 'down' ? 0.7 : 0.35), t + 0.05);
+    const n = this.ctx.createBufferSource(); n.buffer = this.noiseBuf;
+    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = kind === 'denied' ? 300 : 1400; f.Q.value = 2;
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(kind === 'denied' ? 0.25 : 0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    n.connect(f); f.connect(g); g.connect(this.bus); n.start(t, Math.random()); n.stop(t + 0.1);
+  }
+
+  update(rpm, throttle, speed, slip, offroad, nitro, limiter = false) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime, k = 0.05;
     const f = (rpm / 60) * 2; // 4-stroke firing frequency
     for (const { o, mult } of this.oscs) o.frequency.setTargetAtTime(f * mult, t, 0.03);
     this.eFilter.frequency.setTargetAtTime(500 + throttle * 2600 + rpm * 0.25 + (nitro ? 1200 : 0), t, k);
-    this.eOut.gain.setTargetAtTime(0.16 + throttle * 0.22 + (rpm / 8000) * 0.12, t, k);
+    const lim = limiter && throttle > 0.5 ? (Math.sin(t * 90) > 0 ? 0.35 : 1) : 1;
+    this.eOut.gain.setTargetAtTime((0.16 + throttle * 0.22 + (rpm / 8000) * 0.12) * lim, t, k);
     this.intakeGain.gain.setTargetAtTime(throttle * 0.35 + (nitro ? 0.4 : 0), t, k);
     const s = Math.min(1, Math.max(0, (slip - 3.5) / 9)) * Math.min(1, speed / 8);
     this.skidGain.gain.setTargetAtTime(s * 0.32, t, 0.04);

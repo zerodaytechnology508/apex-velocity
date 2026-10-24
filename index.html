@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Apex Velocity — 3D Racing Game</title>
-<meta name="description" content="Apex Velocity is a free realistic 3D car racing game you play right in your browser. Race five rivals on a 2.7 km circuit with real-time shadows, reflections and up to 4K rendering. No download.">
+<meta name="description" content="Apex Velocity is a free realistic 3D car racing game in your browser. Five circuits from alpine to desert, coast, snow and night city, four cars, cockpit view, manual gearbox and up to 4K graphics. No download.">
 <meta name="theme-color" content="#0c1016">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
@@ -38,54 +38,73 @@
 <section id="menu" class="screen" hidden>
   <div class="menu-col">
     <header class="brand">
-      <p class="eyebrow">Round 1 · Valle Ridge Circuit · 2.7 km</p>
+      <p class="eyebrow">5 circuits · 4 cars · day to night</p>
       <h1><span>APEX</span><span>VELOCITY</span></h1>
     </header>
     <div class="panel">
       <div class="opt">
+        <span class="lbl">Circuit</span>
+        <div id="mapGrid" class="cards maps"></div>
+      </div>
+      <div class="opt">
+        <span class="lbl">Car</span>
+        <div id="carGrid" class="cards cars"></div>
+      </div>
+      <div class="opt">
         <div class="opt-head"><span class="lbl">Paint</span><span id="paintName" class="val"></span></div>
         <div id="swatches" class="swatches"></div>
       </div>
-      <div class="opt">
-        <span class="lbl">Race length</span>
-        <div id="segLaps" class="seg"><button type="button" data-v="1">1 lap</button><button type="button" data-v="3">3 laps</button><button type="button" data-v="5">5 laps</button></div>
-      </div>
-      <div class="opt">
-        <span class="lbl">Rivals</span>
-        <div id="segDiff" class="seg"><button type="button" data-v="easy">Rookie</button><button type="button" data-v="normal">Pro</button><button type="button" data-v="hard">Legend</button></div>
-      </div>
-      <div class="opt">
-        <div class="opt-head"><span class="lbl">Graphics</span><span id="qNote" class="val"></span></div>
-        <div id="segQual" class="seg"><button type="button" data-v="low">Fast</button><button type="button" data-v="high">High</button><button type="button" data-v="ultra">Ultra 4K</button></div>
+      <div class="opt-row">
+        <div class="opt">
+          <span class="lbl">Race length</span>
+          <div id="segLaps" class="seg"><button type="button" data-v="1">1 lap</button><button type="button" data-v="3">3 laps</button><button type="button" data-v="5">5 laps</button></div>
+        </div>
+        <div class="opt">
+          <span class="lbl">Rivals</span>
+          <div id="segDiff" class="seg"><button type="button" data-v="easy">Rookie</button><button type="button" data-v="normal">Pro</button><button type="button" data-v="hard">Legend</button></div>
+        </div>
+        <div class="opt">
+          <span class="lbl">Gearbox</span>
+          <div id="segTrans" class="seg"><button type="button" data-v="auto">Automatic</button><button type="button" data-v="manual">Manual</button></div>
+        </div>
+        <div class="opt">
+          <div class="opt-head"><span class="lbl">Graphics</span><span id="qNote" class="val"></span></div>
+          <div id="segQual" class="seg"><button type="button" data-v="low">Fast</button><button type="button" data-v="high">High</button><button type="button" data-v="ultra">Ultra 4K</button></div>
+        </div>
       </div>
       <button id="btnStart" type="button" class="primary">Start race</button>
       <div class="row">
         <button id="btnHow" type="button" class="ghost">Controls</button>
         <button id="btnFull" type="button" class="ghost">Fullscreen</button>
       </div>
-      <p class="best">Lap record <b id="bestMenu"></b></p>
+      <p class="best">Track record <b id="bestMenu"></b></p>
     </div>
     <div id="adMenu" class="ad-slot" hidden></div>
     <footer class="legal"><a href="privacy.html">Privacy</a><span>·</span><a href="about.html">About</a></footer>
   </div>
 </section>
+<div id="mapVeil" class="veil" hidden><p id="mapVeilText">Loading…</p></div>
 
 <section id="howto" class="screen" hidden>
   <div class="panel wide">
     <h2>Controls</h2>
     <div class="keys">
       <div><kbd>W</kbd><kbd>↑</kbd><span>Throttle</span></div>
-      <div><kbd>S</kbd><kbd>↓</kbd><span>Brake · reverse</span></div>
+      <div><kbd>S</kbd><kbd>↓</kbd><span>Brake · reverse (auto)</span></div>
       <div><kbd>A</kbd><kbd>D</kbd><span>Steer</span></div>
       <div><kbd>Space</kbd><span>Handbrake · drift</span></div>
       <div><kbd>Shift</kbd><kbd>N</kbd><span>Nitro</span></div>
+      <div><kbd>H</kbd><span>Horn</span></div>
+      <div><kbd>E</kbd><kbd>Q</kbd><span>Shift up · down (manual)</span></div>
+      <div><kbd>T</kbd><span>Switch auto / manual</span></div>
       <div><kbd>C</kbd><span>Change camera</span></div>
+      <div><kbd>V</kbd><span>Cockpit view</span></div>
+      <div><kbd>B</kbd><span>Look back (hold)</span></div>
       <div><kbd>R</kbd><span>Back on track</span></div>
       <div><kbd>P</kbd><kbd>Esc</kbd><span>Pause</span></div>
       <div><kbd>M</kbd><span>Mute</span></div>
-      <div><kbd>F</kbd><span>Show FPS</span></div>
     </div>
-    <p class="note">Gamepads work too: right trigger to accelerate, left trigger to brake, A for handbrake, B for nitro, Y for camera. On phones and tablets, on-screen pedals appear when the race starts.</p>
+    <p class="note">Manual gearbox: shift up near the green-to-red shift lights; the gearbox refuses downshifts that would over-rev the engine. In reverse, shift down from neutral at a standstill. Gamepads: RT throttle, LT brake, A handbrake, B nitro, RB / LB shift, Y camera, right stick click for cockpit, left stick click for horn, Back to look behind. On phones and tablets, on-screen controls appear when the race starts.</p>
     <button id="btnHowBack" type="button" class="primary">Back</button>
   </div>
 </section>
@@ -143,6 +162,11 @@
   <div class="t-left">
     <button type="button" data-touch="left" aria-label="Steer left">◀</button>
     <button type="button" data-touch="right" aria-label="Steer right">▶</button>
+  </div>
+  <div class="t-mid">
+    <button id="touchCam" type="button" class="small" aria-label="Change camera">CAM</button>
+    <button type="button" data-touch="horn" class="small" aria-label="Horn">HORN</button>
+    <span id="touchShift" hidden><button type="button" data-tap="shiftDown" class="small" aria-label="Shift down">−</button><button type="button" data-tap="shiftUp" class="small" aria-label="Shift up">+</button></span>
   </div>
   <div class="t-right">
     <button type="button" data-touch="nitro" class="small" aria-label="Nitro">N2O</button>

@@ -2,18 +2,17 @@
 export class Input {
   constructor() {
     this.keys = new Set();
-    this.touch = { left: false, right: false, gas: false, brake: false, nitro: false, hb: false };
+    this.touch = { left: false, right: false, gas: false, brake: false, nitro: false, hb: false, horn: false };
     this.throttle = 0; this.brake = 0; this.steer = 0; this.handbrake = false; this.nitro = false;
+    this.horn = false; this.lookBack = false; this.analog = false;
     this.actions = {};
     this._padPrev = [];
     const block = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space']);
+    const map = { KeyC: 'camera', KeyV: 'cockpit', KeyR: 'reset', KeyP: 'pause', Escape: 'pause', KeyM: 'mute', KeyF: 'fps', KeyE: 'shiftUp', KeyQ: 'shiftDown', KeyT: 'transmission' };
     window.addEventListener('keydown', (e) => {
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if (block.has(e.code)) e.preventDefault();
-      if (!e.repeat) {
-        const map = { KeyC: 'camera', KeyR: 'reset', KeyP: 'pause', Escape: 'pause', KeyM: 'mute', KeyF: 'fps' };
-        if (map[e.code]) this._fire(map[e.code]);
-      }
+      if (!e.repeat && map[e.code]) this._fire(map[e.code]);
       this.keys.add(e.code);
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
@@ -31,6 +30,9 @@ export class Input {
       el.addEventListener('pointercancel', set(false));
       el.addEventListener('pointerleave', set(false));
     });
+    root.querySelectorAll('[data-tap]').forEach((el) => {
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); this._fire(el.dataset.tap); });
+    });
   }
 
   poll() {
@@ -40,20 +42,25 @@ export class Input {
     let st = ((k.has('KeyD') || k.has('ArrowRight') || t.right) ? 1 : 0) - ((k.has('KeyA') || k.has('ArrowLeft') || t.left) ? 1 : 0);
     let hb = k.has('Space') || t.hb;
     let nit = k.has('ShiftLeft') || k.has('ShiftRight') || k.has('KeyN') || t.nitro;
+    let horn = k.has('KeyH') || t.horn;
+    let back = k.has('KeyB');
+    let analog = false;
 
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const p of pads) {
       if (!p) continue;
       const ax = p.axes[0] || 0;
-      if (Math.abs(ax) > 0.12) st = Math.sign(ax) * (Math.abs(ax) - 0.12) / 0.88;
+      if (Math.abs(ax) > 0.1) { st = Math.sign(ax) * (Math.abs(ax) - 0.1) / 0.9; analog = true; }
       const b = (n) => p.buttons[n] ? p.buttons[n].value || (p.buttons[n].pressed ? 1 : 0) : 0;
+      if (b(7) > 0.02 || b(6) > 0.02) analog = true;
       thr = Math.max(thr, b(7)); brk = Math.max(brk, b(6));
-      hb = hb || b(0) > 0.5; nit = nit || b(1) > 0.5 || b(5) > 0.5;
+      hb = hb || b(0) > 0.5; nit = nit || b(1) > 0.5;
+      horn = horn || b(10) > 0.5; back = back || b(8) > 0.5;
       const edge = (n, name) => { const v = b(n) > 0.5; if (v && !this._padPrev[n]) this._fire(name); this._padPrev[n] = v; };
-      edge(3, 'camera'); edge(9, 'pause'); edge(2, 'reset');
+      edge(3, 'camera'); edge(9, 'pause'); edge(2, 'reset'); edge(5, 'shiftUp'); edge(4, 'shiftDown'); edge(11, 'cockpit');
       break;
     }
     this.throttle = thr; this.brake = brk; this.steer = Math.max(-1, Math.min(1, st));
-    this.handbrake = hb; this.nitro = nit;
+    this.handbrake = hb; this.nitro = nit; this.horn = horn; this.lookBack = back; this.analog = analog;
   }
 }

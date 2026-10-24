@@ -41,7 +41,7 @@ a { color: var(--muted); }
 #pause, #results, #howto { background: rgba(6, 9, 13, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 #menu { justify-content: flex-start; background: linear-gradient(90deg, rgba(7,10,14,0.92) 0%, rgba(7,10,14,0.55) 38%, rgba(7,10,14,0) 62%); }
 .screen > * { margin-block: auto; }
-.menu-col { width: min(400px, 100%); display: grid; gap: 16px; margin-left: clamp(0px, 4vw, 64px); }
+.menu-col { width: min(560px, 100%); display: grid; gap: 16px; margin-left: clamp(0px, 4vw, 64px); }
 @media (max-height: 760px) { .panel { gap: 12px; padding: 16px; } .brand h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); } .seg button { padding: 8px 6px; } .primary { padding: 12px 16px; } }
 .brand { display: grid; gap: 10px; }
 .brand h1 { margin: 0; display: grid; font: 700 clamp(2.6rem, 6.4vw, 4.4rem)/0.88 var(--font-display); letter-spacing: 0.01em; transform: skewX(-9deg); transform-origin: left bottom; text-wrap: balance; }
@@ -90,6 +90,26 @@ table.res { width: 100%; border-collapse: collapse; font-variant-numeric: tabula
 .res tr.me td { background: rgba(255, 200, 31, 0.12); }
 .res tr.me td:nth-child(2) { color: var(--accent); font-weight: 600; }
 
+/* ---------- track & car pickers ---------- */
+.cards { display: grid; gap: 8px; }
+.cards.maps { grid-auto-flow: column; grid-auto-columns: 150px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.cards.cars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.card { text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--line); padding: 8px 10px; display: grid; gap: 4px; min-width: 0; transition: border-color .15s, background .15s; }
+.card:hover { border-color: rgba(214,226,240,0.3); }
+.card[aria-pressed="true"] { border-color: var(--accent); background: rgba(255, 200, 31, 0.08); }
+.card canvas { width: 100%; height: auto; aspect-ratio: 160 / 96; display: block; background: rgba(0,0,0,0.25); }
+.card .nm { font: 700 1rem/1.1 var(--font-display); }
+.card .meta { font-size: 0.82rem; color: var(--muted); }
+.card .meta i { font-style: normal; font-variant-numeric: tabular-nums; }
+.card .stat { display: grid; grid-template-columns: 3.6em 1fr; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); }
+.card .stat em { font-style: normal; letter-spacing: 0.06em; text-transform: uppercase; }
+.card .stat b { height: 4px; background: linear-gradient(90deg, var(--accent) var(--v), rgba(255,255,255,0.1) var(--v)); }
+.card .top { font: 600 0.8rem var(--font-display); color: var(--fg); font-variant-numeric: tabular-nums; }
+.opt-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+.veil { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: rgba(6, 9, 13, 0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.veil p { font: 600 1.2rem var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg); }
+.res .carname { display: block; font-size: 0.75rem; color: var(--muted); margin-left: 18px; }
+
 /* ---------- HUD ---------- */
 #hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; font-family: var(--font-display); }
 .hud-tl { position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); display: flex; gap: 6px; align-items: stretch; }
@@ -107,6 +127,7 @@ table.res { width: 100%; border-collapse: collapse; font-variant-numeric: tabula
 .board li i { width: 4px; height: 14px; }
 .board li.me { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .minimap { position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); width: 170px; height: 170px; background: rgba(11,15,21,0.55); border: 1px solid var(--line); }
+#hud.cockpit .speedo { width: 150px; height: 150px; }
 .hud-br { position: absolute; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; justify-items: center; }
 .speedo { width: 220px; height: 220px; }
 .nitro { display: flex; align-items: center; gap: 8px; width: 200px; font-size: 0.72rem; letter-spacing: 0.14em; color: #8ec9ff; }
@@ -129,13 +150,15 @@ table.res { width: 100%; border-collapse: collapse; font-variant-numeric: tabula
 #touch button.on { background: rgba(255,200,31,0.45); border-color: var(--accent); }
 #touch .small { width: 58px; height: 58px; font-size: 0.8rem; }
 #touch .gas { width: 92px; height: 112px; border-radius: 22px; }
-.t-left, .t-right { display: flex; gap: 12px; align-items: flex-end; }
+.t-left, .t-right, .t-mid, #touchShift { display: flex; gap: 12px; align-items: flex-end; }
+.t-mid { align-self: flex-end; gap: 8px; }
 .t-right { flex-wrap: wrap; justify-content: flex-end; max-width: 60%; }
 
 @media (pointer: coarse) {
   .hud-br { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (max-width: 760px) {
+  .opt-row { grid-template-columns: 1fr; }
   .speedo { width: 150px; height: 150px; }
   .nitro { width: 150px; }
   .minimap { width: 110px; height: 110px; }
@@ -148,11 +171,18 @@ table.res { width: 100%; border-collapse: collapse; font-variant-numeric: tabula
   .menu-col { margin-left: 0; }
 }
 @media (max-height: 520px) and (pointer: coarse) {
-  .hud-br { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: 50%; transform: translateX(50%); }
-  .speedo { width: 120px; height: 120px; }
+  .hud-br { top: calc(8px + env(safe-area-inset-top, 0px)); bottom: auto; right: 50%; transform: translateX(50%); gap: 2px; }
+  .speedo, #hud.cockpit .speedo { width: 104px; height: 104px; }
+  .nitro { width: 110px; }
+  .hmsg { top: 42%; }
+  .hsub { top: calc(42% + clamp(2rem, 5vw, 3.6rem)); }
 }
 @media (max-height: 500px) {
-  .menu-col { width: min(660px, 100%); gap: 10px; }
+  .menu-col { width: min(760px, 100%); gap: 10px; }
+  .panel > .opt:nth-child(1), .panel > .opt:nth-child(2), .panel > .opt-row { grid-column: 1 / -1; }
+  .cards.cars { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .card .stat { display: none; }
+  .opt-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .brand .eyebrow, .best, .legal { display: none; }
   .brand h1 { display: block; font-size: 2rem; }
   .brand h1 span + span { margin-left: 0.3em; }

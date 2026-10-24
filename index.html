@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Apex Velocity — 3D Racing Game</title>
+<meta name="description" content="Apex Velocity is a free realistic 3D car racing game you play right in your browser. Race five rivals on a 2.7 km circuit with real-time shadows, reflections and up to 4K rendering. No download.">
+<meta name="theme-color" content="#0c1016">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="canonical" href="https://YOUR-DOMAIN.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Apex Velocity — Free 3D Racing Game">
+<meta property="og:description" content="Realistic 3D racing in your browser. Five AI rivals, nitro, drift, up to 4K. No download.">
+<meta property="og:url" content="https://YOUR-DOMAIN.com/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=Chakra+Petch:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Apex Velocity","description":"Free realistic 3D car racing game playable in the browser.","genre":["Racing","Simulation"],"gamePlatform":["Web browser","PC","Mobile"],"applicationCategory":"Game","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"playMode":"SinglePlayer"}
+</script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+</head>
+<body>
+<!--GAME-UI-START-->
+<canvas id="game" aria-label="Apex Velocity race view"></canvas>
+
+<div id="loading">
+  <div class="load-inner">
+    <div class="brand-mark"><span>APEX</span><span>VELOCITY</span></div>
+    <div class="load-track"><div id="loadBar"></div></div>
+    <p id="loadText">Starting engine…</p>
+  </div>
+</div>
+
+<section id="menu" class="screen" hidden>
+  <div class="menu-col">
+    <header class="brand">
+      <p class="eyebrow">Round 1 · Valle Ridge Circuit · 2.7 km</p>
+      <h1><span>APEX</span><span>VELOCITY</span></h1>
+    </header>
+    <div class="panel">
+      <div class="opt">
+        <div class="opt-head"><span class="lbl">Paint</span><span id="paintName" class="val"></span></div>
+        <div id="swatches" class="swatches"></div>
+      </div>
+      <div class="opt">
+        <span class="lbl">Race length</span>
+        <div id="segLaps" class="seg"><button type="button" data-v="1">1 lap</button><button type="button" data-v="3">3 laps</button><button type="button" data-v="5">5 laps</button></div>
+      </div>
+      <div class="opt">
+        <span class="lbl">Rivals</span>
+        <div id="segDiff" class="seg"><button type="button" data-v="easy">Rookie</button><button type="button" data-v="normal">Pro</button><button type="button" data-v="hard">Legend</button></div>
+      </div>
+      <div class="opt">
+        <div class="opt-head"><span class="lbl">Graphics</span><span id="qNote" class="val"></span></div>
+        <div id="segQual" class="seg"><button type="button" data-v="low">Fast</button><button type="button" data-v="high">High</button><button type="button" data-v="ultra">Ultra 4K</button></div>
+      </div>
+      <button id="btnStart" type="button" class="primary">Start race</button>
+      <div class="row">
+        <button id="btnHow" type="button" class="ghost">Controls</button>
+        <button id="btnFull" type="button" class="ghost">Fullscreen</button>
+      </div>
+      <p class="best">Lap record <b id="bestMenu"></b></p>
+    </div>
+    <div id="adMenu" class="ad-slot" hidden></div>
+    <footer class="legal"><a href="privacy.html">Privacy</a><span>·</span><a href="about.html">About</a></footer>
+  </div>
+</section>
+
+<section id="howto" class="screen" hidden>
+  <div class="panel wide">
+    <h2>Controls</h2>
+    <div class="keys">
+      <div><kbd>W</kbd><kbd>↑</kbd><span>Throttle</span></div>
+      <div><kbd>S</kbd><kbd>↓</kbd><span>Brake · reverse</span></div>
+      <div><kbd>A</kbd><kbd>D</kbd><span>Steer</span></div>
+      <div><kbd>Space</kbd><span>Handbrake · drift</span></div>
+      <div><kbd>Shift</kbd><kbd>N</kbd><span>Nitro</span></div>
+      <div><kbd>C</kbd><span>Change camera</span></div>
+      <div><kbd>R</kbd><span>Back on track</span></div>
+      <div><kbd>P</kbd><kbd>Esc</kbd><span>Pause</span></div>
+      <div><kbd>M</kbd><span>Mute</span></div>
+      <div><kbd>F</kbd><span>Show FPS</span></div>
+    </div>
+    <p class="note">Gamepads work too: right trigger to accelerate, left trigger to brake, A for handbrake, B for nitro, Y for camera. On phones and tablets, on-screen pedals appear when the race starts.</p>
+    <button id="btnHowBack" type="button" class="primary">Back</button>
+  </div>
+</section>
+
+<section id="pause" class="screen" hidden>
+  <div class="panel narrow">
+    <h2>Paused</h2>
+    <button id="btnResume" type="button" class="primary">Resume</button>
+    <button id="btnRestart" type="button" class="ghost">Restart race</button>
+    <button id="btnQuit" type="button" class="ghost">Quit to menu</button>
+  </div>
+</section>
+
+<section id="results" class="screen" hidden>
+  <div class="panel wide">
+    <p class="eyebrow">Classification</p>
+    <h2 id="resTitle">Results</h2>
+    <p id="resSub" class="sub"></p>
+    <div class="tbl-wrap">
+      <table class="res"><thead><tr><th>Pos</th><th>Driver</th><th>Time</th><th>Best lap</th></tr></thead><tbody id="resRows"></tbody></table>
+    </div>
+    <button id="btnReward" type="button" class="reward" hidden>Watch an ad · start next race with double nitro</button>
+    <p id="rewardNote" class="note ok" hidden>Double nitro is ready for your next race.</p>
+    <div class="row">
+      <button id="btnAgain" type="button" class="primary">Race again</button>
+      <button id="btnMenu" type="button" class="ghost">Menu</button>
+    </div>
+    <div id="adResults" class="ad-slot" hidden></div>
+  </div>
+</section>
+
+<div id="hud" hidden>
+  <div class="hud-tl">
+    <div class="tile big"><span class="k">POS</span><span class="v"><b id="hPos">1</b><i id="hPosOf">/6</i></span></div>
+    <div class="tile big"><span class="k">LAP</span><span class="v"><b id="hLap">1</b><i id="hLapOf">/3</i></span></div>
+    <div class="tile times">
+      <div><span class="k">LAP</span><span id="hCur" class="t">0:00.000</span></div>
+      <div><span class="k">BEST</span><span id="hBest" class="t purple">--:--.---</span></div>
+      <div><span class="k">RACE</span><span id="hTotal" class="t">0:00.000</span></div>
+    </div>
+  </div>
+  <ol id="hBoard" class="board"></ol>
+  <canvas id="minimap" class="minimap"></canvas>
+  <div class="hud-br">
+    <canvas id="speedo" class="speedo"></canvas>
+    <div class="nitro"><span>N2O</span><div class="bar"><div id="hNitro"></div></div></div>
+  </div>
+  <div id="hMsg" class="hmsg"></div>
+  <div id="hSub" class="hsub"></div>
+  <div id="hFps" class="fps" hidden></div>
+  <button id="btnPauseTouch" type="button" class="pause-btn" aria-label="Pause">II</button>
+</div>
+
+<div id="touch" hidden>
+  <div class="t-left">
+    <button type="button" data-touch="left" aria-label="Steer left">◀</button>
+    <button type="button" data-touch="right" aria-label="Steer right">▶</button>
+  </div>
+  <div class="t-right">
+    <button type="button" data-touch="nitro" class="small" aria-label="Nitro">N2O</button>
+    <button type="button" data-touch="hb" class="small" aria-label="Handbrake">HB</button>
+    <button type="button" data-touch="brake" aria-label="Brake">BRK</button>
+    <button type="button" data-touch="gas" class="gas" aria-label="Throttle">GAS</button>
+  </div>
+</div>
+<!--GAME-UI-END-->
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

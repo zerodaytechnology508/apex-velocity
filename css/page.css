@@ -1,0 +1,8 @@
+:root { --ink:#0b0f15; --fg:#e9edf2; --muted:#9aa7b4; --accent:#ffc81f; --line:rgba(214,226,240,.14); color-scheme: dark; }
+body { margin:0; background:var(--ink); color:var(--fg); font:17px/1.6 'Barlow Semi Condensed', 'Segoe UI', system-ui, sans-serif; }
+main { max-width: 68ch; margin: 0 auto; padding-block: 48px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 700 2.4rem/1.05 'Chakra Petch', 'Arial Narrow', sans-serif; margin: 8px 0 20px; text-wrap: balance; }
+h2 { font: 600 1.25rem/1.2 'Chakra Petch', 'Arial Narrow', sans-serif; margin: 32px 0 8px; }
+a { color: var(--accent); }
+.back { font: 600 .85rem 'Chakra Petch', sans-serif; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+.meta { color: var(--muted); font-size: .9rem; }

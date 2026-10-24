@@ -1,0 +1,11 @@
+{
+  "name": "Apex Velocity",
+  "short_name": "Apex",
+  "description": "Realistic 3D racing in your browser.",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0b0f15",
+  "theme_color": "#0b0f15",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

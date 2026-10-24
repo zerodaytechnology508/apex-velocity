@@ -1,0 +1,21 @@
+# Netlify: static site, no build step. The game is served straight from the repo root.
+[build]
+  publish = "."
+  command = ""
+
+# Three.js library files never change between deploys: cache them for a year
+[[headers]]
+  for = "/lib/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
